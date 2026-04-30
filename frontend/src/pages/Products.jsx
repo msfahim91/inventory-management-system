@@ -5,26 +5,32 @@ import { Plus, Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [form, setForm] = useState({
     name: '', description: '', sku: '',
-    price: '', quantity: '', reorderLevel: '10'
+    price: '', quantity: '', reorderLevel: '10',
+    categoryId: ''
   });
   const [stockForm, setStockForm] = useState({
     quantity: '', type: 'STOCK_IN', reason: ''
   });
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchProducts = async () => {
+  const fetchData = async () => {
     try {
-      const res = await API.get('/products');
-      setProducts(res.data.data || []);
+      const [productsRes, categoriesRes] = await Promise.all([
+        API.get('/products'),
+        API.get('/categories')
+      ]);
+      setProducts(productsRes.data.data || []);
+      setCategories(categoriesRes.data.data || []);
     } catch {
-      toast.error('Failed to load products');
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -33,14 +39,23 @@ const Products = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        name: form.name,
+        description: form.description,
+        sku: form.sku,
+        price: form.price,
+        quantity: form.quantity,
+        reorderLevel: form.reorderLevel,
+        category: form.categoryId ? { id: form.categoryId } : null
+      };
       if (selectedProduct) {
-        await API.put(`/products/${selectedProduct.id}`, form);
+        await API.put(`/products/${selectedProduct.id}`, payload);
         toast.success('Product updated!');
       } else {
-        await API.post('/products', form);
+        await API.post('/products', payload);
         toast.success('Product created!');
       }
-      fetchProducts();
+      fetchData();
       setShowModal(false);
       resetForm();
     } catch (err) {
@@ -53,7 +68,7 @@ const Products = () => {
     try {
       await API.delete(`/products/${id}`);
       toast.success('Product deleted!');
-      fetchProducts();
+      fetchData();
     } catch {
       toast.error('Failed to delete');
     }
@@ -64,7 +79,7 @@ const Products = () => {
     try {
       await API.post(`/products/${selectedProduct.id}/stock`, stockForm);
       toast.success('Stock updated!');
-      fetchProducts();
+      fetchData();
       setShowStockModal(false);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
@@ -73,7 +88,7 @@ const Products = () => {
 
   const resetForm = () => {
     setForm({ name: '', description: '', sku: '',
-      price: '', quantity: '', reorderLevel: '10' });
+      price: '', quantity: '', reorderLevel: '10', categoryId: '' });
     setSelectedProduct(null);
   };
 
@@ -82,7 +97,8 @@ const Products = () => {
     setForm({
       name: product.name, description: product.description || '',
       sku: product.sku || '', price: product.price,
-      quantity: product.quantity, reorderLevel: product.reorderLevel
+      quantity: product.quantity, reorderLevel: product.reorderLevel,
+      categoryId: product.category?.id || ''
     });
     setShowModal(true);
   };
@@ -112,6 +128,7 @@ const Products = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Name</th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Category</th>
               <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">SKU</th>
               <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Price</th>
               <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Stock</th>
@@ -126,7 +143,12 @@ const Products = () => {
                   <p className="font-medium text-gray-800">{product.name}</p>
                   <p className="text-sm text-gray-500">{product.description}</p>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{product.sku}</td>
+                <td className="px-6 py-4">
+                  <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs">
+                    {product.category?.name || 'No Category'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">{product.sku || '-'}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">৳{product.price}</td>
                 <td className="px-6 py-4">
                   <span className={`text-sm font-medium ${
@@ -135,13 +157,17 @@ const Products = () => {
                   }`}>
                     {product.quantity}
                   </span>
+                  <span className="text-xs text-gray-400 ml-1">
+                    (min: {product.reorderLevel})
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     product.quantity <= product.reorderLevel
                       ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                   }`}>
-                    {product.quantity <= product.reorderLevel ? 'Low Stock' : 'In Stock'}
+                    {product.quantity === 0 ? 'Out of Stock' :
+                      product.quantity <= product.reorderLevel ? 'Low Stock' : 'In Stock'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -187,10 +213,20 @@ const Products = () => {
                 value={form.description}
                 onChange={(e) => setForm({...form, description: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-              <input type="text" placeholder="SKU"
-                value={form.sku}
-                onChange={(e) => setForm({...form, sku: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="SKU"
+                  value={form.sku}
+                  onChange={(e) => setForm({...form, sku: e.target.value})}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <select value={form.categoryId}
+                  onChange={(e) => setForm({...form, categoryId: e.target.value})}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="">No Category</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <input type="number" placeholder="Price *"
                   value={form.price}
@@ -203,7 +239,7 @@ const Products = () => {
                   className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required />
               </div>
-              <input type="number" placeholder="Reorder Level"
+              <input type="number" placeholder="Reorder Level (Alert threshold)"
                 value={form.reorderLevel}
                 onChange={(e) => setForm({...form, reorderLevel: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -227,30 +263,31 @@ const Products = () => {
       {showStockModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-4">
-              Update Stock — {selectedProduct?.name}
-            </h2>
+            <h2 className="text-lg font-semibold mb-1">Update Stock</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              {selectedProduct?.name} — Current: {selectedProduct?.quantity}
+            </p>
             <form onSubmit={handleStockUpdate} className="space-y-3">
               <select value={stockForm.type}
                 onChange={(e) => setStockForm({...stockForm, type: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="STOCK_IN">Stock In ➕</option>
-                <option value="STOCK_OUT">Stock Out ➖</option>
-                <option value="ADJUSTMENT">Adjustment</option>
+                <option value="STOCK_IN">Stock In ➕ (Add)</option>
+                <option value="STOCK_OUT">Stock Out ➖ (Remove)</option>
+                <option value="ADJUSTMENT">Adjustment (Set exact)</option>
               </select>
               <input type="number" placeholder="Quantity *"
                 value={stockForm.quantity}
                 onChange={(e) => setStockForm({...stockForm, quantity: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required />
-              <input type="text" placeholder="Reason"
+              <input type="text" placeholder="Reason (optional)"
                 value={stockForm.reason}
                 onChange={(e) => setStockForm({...stockForm, reason: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               <div className="flex gap-3 pt-2">
                 <button type="submit"
                   className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
-                  Update
+                  Update Stock
                 </button>
                 <button type="button"
                   onClick={() => setShowStockModal(false)}
