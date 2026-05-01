@@ -11,18 +11,30 @@ import Suppliers from './pages/Suppliers';
 import PurchaseOrders from './pages/PurchaseOrders';
 import SalesOrders from './pages/SalesOrders';
 import Alerts from './pages/Alerts';
-import AdminUsers from './pages/AdminUsers';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminOrders from './pages/admin/AdminOrders';
 import Layout from './components/Layout';
+import AdminLayout from './components/AdminLayout';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+  );
   return user ? children : <Navigate to="/login" />;
 };
 
 const AdminRoute = ({ children }) => {
   const { user, loading, isAdmin } = useAuth();
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+  );
   return user && isAdmin() ? children : <Navigate to="/dashboard" />;
 };
 
@@ -30,15 +42,17 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Toaster position="top-right" />
+        <Toaster position="top-right" toastOptions={{
+          style: { borderRadius: '10px', background: '#333', color: '#fff' }
+        }} />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
+
+          {/* User Routes */}
           <Route path="/" element={
-            <PrivateRoute>
-              <Layout />
-            </PrivateRoute>
+            <PrivateRoute><Layout /></PrivateRoute>
           }>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="products" element={<Products />} />
@@ -47,11 +61,16 @@ function App() {
             <Route path="purchase-orders" element={<PurchaseOrders />} />
             <Route path="sales-orders" element={<SalesOrders />} />
             <Route path="alerts" element={<Alerts />} />
-            <Route path="admin/users" element={
-              <AdminRoute>
-                <AdminUsers />
-              </AdminRoute>
-            } />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={
+            <AdminRoute><AdminLayout /></AdminRoute>
+          }>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
           </Route>
         </Routes>
       </BrowserRouter>
