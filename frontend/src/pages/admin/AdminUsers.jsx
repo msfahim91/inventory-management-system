@@ -3,7 +3,7 @@ import API from '../../api/axios';
 import toast from 'react-hot-toast';
 import {
   CheckCircle, XCircle, Trash2,
-  Search, Filter, UserPlus
+  Search, UserPlus, Users
 } from 'lucide-react';
 
 const AdminUsers = () => {

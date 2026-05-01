@@ -11,12 +11,7 @@ const Layout = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isAdmin()) {
-      navigate('/admin/dashboard');
-    }
-  }, []);
-
+  
   const navItems = [
     { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { path: '/products', icon: <Package size={20} />, label: 'Products' },
