@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Package, Tag, Truck,
   ShoppingCart, ShoppingBag, Bell, LogOut,
-  Shield, ChevronRight
+  Shield, ChevronRight, User, FileText
 } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -20,6 +20,8 @@ const Layout = () => {
     { path: '/purchase-orders', icon: <ShoppingCart size={20} />, label: 'Purchase Orders' },
     { path: '/sales-orders', icon: <ShoppingBag size={20} />, label: 'Sales Orders' },
     { path: '/alerts', icon: <Bell size={20} />, label: 'Alerts' },
+    { path: '/profile', icon: <User size={20} />, label: 'My Profile' },
+    { path: '/reports', icon: <FileText size={20} />, label: 'Reports' },
   ];
 
   return (

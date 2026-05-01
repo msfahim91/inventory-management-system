@@ -17,6 +17,8 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminOrders from './pages/admin/AdminOrders';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
+import Profile from './pages/Profile';
+import Reports from './pages/Reports';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -61,6 +63,8 @@ function App() {
             <Route path="purchase-orders" element={<PurchaseOrders />} />
             <Route path="sales-orders" element={<SalesOrders />} />
             <Route path="alerts" element={<Alerts />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
 
           {/* Admin Routes */}
