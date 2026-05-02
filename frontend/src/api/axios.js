@@ -2,7 +2,8 @@ import axios from 'axios';
 
 const API = axios.create({
   // baseURL: 'http://localhost:8080/api',
-  baseURL: 'inventory-management-system-production-e012.up.railway.app',
+  // baseURL: 'inventory-management-system-production-e012.up.railway.app',
+  baseURL: 'https://inventory-management-system-production-e012.up.railway.app/api',
 });
 
 API.interceptors.request.use((config) => {
