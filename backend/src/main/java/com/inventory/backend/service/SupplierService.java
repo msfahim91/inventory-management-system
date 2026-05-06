@@ -35,6 +35,7 @@ public class SupplierService {
         supplier.setPhone(updated.getPhone());
         supplier.setAddress(updated.getAddress());
         supplier.setContactPerson(updated.getContactPerson());
+        supplier.setProductName(updated.getProductName());
         supplier.setStatus(updated.getStatus());
         return supplierRepository.save(supplier);
     }

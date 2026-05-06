@@ -33,9 +33,19 @@ const AdminLayout = () => {
 
         <div className="p-4 border-b border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
+            <div className="w-9 h-9 rounded-full overflow-hidden">
+  {localStorage.getItem('profileImage_' + user?.email) ? (
+    <img
+      src={localStorage.getItem('profileImage_' + user?.email)}
+      alt="Profile"
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full bg-red-500 flex items-center justify-center text-white font-bold text-sm">
+      {user?.name?.charAt(0).toUpperCase()}
+    </div>
+  )}
+</div>
             <div>
               <p className="text-sm font-medium">{user?.name}</p>
               <p className="text-xs text-red-400">Administrator</p>

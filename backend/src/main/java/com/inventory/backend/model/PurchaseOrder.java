@@ -32,7 +32,7 @@ public class PurchaseOrder {
     private BigDecimal totalAmount = BigDecimal.ZERO;
     private String notes;
 
-    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<PurchaseOrderItem> items;
 
     @Column(updatable = false)
