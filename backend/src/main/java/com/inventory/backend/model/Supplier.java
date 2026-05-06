@@ -24,6 +24,7 @@ public class Supplier {
     private String phone;
     private String address;
     private String contactPerson;
+    private String productName;
 
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIVE;

@@ -39,12 +39,16 @@ public class AuthService {
         userRepository.save(user);
 
         return new AuthResponse(
-            null,
-            user.getName(),
-            user.getEmail(),
-            user.getRole().name(),
-            user.getStatus().name()
-        );
+        token,
+        user.getId(),
+        user.getName(),
+        user.getEmail(),
+        user.getRole().name(),
+        user.getStatus().name(),
+        user.getBusinessName(),
+        user.getPhone(),
+        user.getAddress()
+    );
     }
 
     public AuthResponse login(AuthRequest request) {

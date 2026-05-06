@@ -10,7 +10,8 @@ const SalesOrders = () => {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     customerName: '', customerEmail: '', customerPhone: '',
-    notes: '', items: [{ productId: '', quantity: '', unitPrice: '' }]
+    notes: '', orderDate: '',
+    items: [{ productId: '', quantity: '', unitPrice: '' }]
   });
 
   useEffect(() => { fetchData(); }, []);
@@ -38,6 +39,7 @@ const SalesOrders = () => {
         customerEmail: form.customerEmail,
         customerPhone: form.customerPhone,
         notes: form.notes,
+        orderDate: form.orderDate,
         items: form.items.map(item => ({
           product: { id: item.productId },
           quantity: parseInt(item.quantity),
@@ -87,13 +89,20 @@ const SalesOrders = () => {
   const updateItem = (index, field, value) => {
     const items = [...form.items];
     items[index][field] = value;
+    // Auto fill price from product
+    if (field === 'productId') {
+      const product = products.find(p => p.id === parseInt(value));
+      if (product) items[index]['unitPrice'] = product.price;
+    }
     setForm({...form, items});
   };
 
   const resetForm = () => {
-    setForm({ customerName: '', customerEmail: '',
-      customerPhone: '', notes: '',
-      items: [{ productId: '', quantity: '', unitPrice: '' }] });
+    setForm({
+      customerName: '', customerEmail: '',
+      customerPhone: '', notes: '', orderDate: '',
+      items: [{ productId: '', quantity: '', unitPrice: '' }]
+    });
   };
 
   const getStatusBadge = (status) => {
@@ -105,7 +114,7 @@ const SalesOrders = () => {
       CANCELLED: 'bg-red-100 text-red-700'
     };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>
         {status}
       </span>
     );
@@ -118,65 +127,62 @@ const SalesOrders = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Sales Orders</h1>
         <button onClick={() => { resetForm(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 font-medium">
           <Plus size={18} /> New Order
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Order #</th>
-              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Customer</th>
-              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Total</th>
-              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Status</th>
-              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Date</th>
-              <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">Actions</th>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Order #</th>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Customer</th>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Total</th>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Date</th>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-50">
             {orders.map((order) => (
               <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-800">
+                <td className="px-6 py-4 font-mono text-sm font-medium text-indigo-600">
                   {order.orderNumber}
                 </td>
                 <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-gray-800">
-                    {order.customerName || '-'}
-                  </p>
+                  <p className="text-sm font-medium text-gray-800">{order.customerName || '-'}</p>
                   <p className="text-xs text-gray-500">{order.customerPhone}</p>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  ৳{order.totalAmount}
-                </td>
+                <td className="px-6 py-4 text-sm font-bold text-gray-800">৳{order.totalAmount}</td>
                 <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(order.createdAt).toLocaleDateString()}
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  {order.orderDate ? new Date(order.orderDate).toLocaleDateString() :
+                   new Date(order.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     {order.status === 'PENDING' && (
                       <button onClick={() => updateStatus(order.id, 'CONFIRMED')}
-                        className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">
+                        className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-200">
                         Confirm
                       </button>
                     )}
                     {order.status === 'CONFIRMED' && (
                       <button onClick={() => updateStatus(order.id, 'SHIPPED')}
-                        className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200">
+                        className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg hover:bg-purple-200">
                         Ship
                       </button>
                     )}
                     {order.status === 'SHIPPED' && (
                       <button onClick={() => updateStatus(order.id, 'DELIVERED')}
-                        className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                        className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-lg hover:bg-green-200">
                         Deliver
                       </button>
                     )}
                     {order.status === 'PENDING' && (
                       <button onClick={() => deleteOrder(order.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded">
+                        className="p-1 text-red-600 hover:bg-red-50 rounded-lg">
                         <Trash2 size={16} />
                       </button>
                     )}
@@ -187,29 +193,49 @@ const SalesOrders = () => {
           </tbody>
         </table>
         {orders.length === 0 && (
-          <div className="text-center py-10 text-gray-500">No orders found</div>
+          <div className="text-center py-12 text-gray-400">No orders found</div>
         )}
       </div>
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-screen overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">New Sales Order</h2>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-screen overflow-y-auto shadow-2xl">
+            <h2 className="text-xl font-bold text-gray-800 mb-5">New Sales Order</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <input type="text" placeholder="Customer Name"
-                  value={form.customerName}
-                  onChange={(e) => setForm({...form, customerName: e.target.value})}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <input type="text" placeholder="Phone"
-                  value={form.customerPhone}
-                  onChange={(e) => setForm({...form, customerPhone: e.target.value})}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name</label>
+                  <input type="text" placeholder="Customer name"
+                    value={form.customerName}
+                    onChange={(e) => setForm({...form, customerName: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                  <input type="text" placeholder="Phone number"
+                    value={form.customerPhone}
+                    onChange={(e) => setForm({...form, customerPhone: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
               </div>
-              <input type="email" placeholder="Customer Email"
-                value={form.customerEmail}
-                onChange={(e) => setForm({...form, customerEmail: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                  <input type="email" placeholder="Customer email"
+                    value={form.customerEmail}
+                    onChange={(e) => setForm({...form, customerEmail: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Order Date *</label>
+                  <input type="date"
+                    value={form.orderDate}
+                    onChange={(e) => setForm({...form, orderDate: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required />
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
@@ -223,29 +249,29 @@ const SalesOrders = () => {
                   <div key={index} className="grid grid-cols-3 gap-2">
                     <select value={item.productId}
                       onChange={(e) => updateItem(index, 'productId', e.target.value)}
-                      className="border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       required>
                       <option value="">Product</option>
                       {products.map(p => (
                         <option key={p.id} value={p.id}>
-                          {p.name} ({p.quantity})
+                          {p.name} ({p.quantity} left)
                         </option>
                       ))}
                     </select>
                     <input type="number" placeholder="Qty"
                       value={item.quantity}
                       onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                      className="border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       required />
                     <div className="flex gap-1">
                       <input type="number" placeholder="Price"
                         value={item.unitPrice}
                         onChange={(e) => updateItem(index, 'unitPrice', e.target.value)}
-                        className="border rounded-lg px-2 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="border border-gray-200 rounded-xl px-2 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         required />
                       {form.items.length > 1 && (
                         <button type="button" onClick={() => removeItem(index)}
-                          className="text-red-500 hover:text-red-700 px-1">✕</button>
+                          className="text-red-500 px-1">✕</button>
                       )}
                     </div>
                   </div>
@@ -255,16 +281,16 @@ const SalesOrders = () => {
               <input type="text" placeholder="Notes"
                 value={form.notes}
                 onChange={(e) => setForm({...form, notes: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
 
               <div className="flex gap-3 pt-2">
                 <button type="submit"
-                  className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+                  className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700">
                   Create Order
                 </button>
                 <button type="button"
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200">
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200">
                   Cancel
                 </button>
               </div>

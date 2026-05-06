@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
 import {
   User, Mail, Phone, Building,
-  MapPin, Lock, Save, Eye, EyeOff
+  MapPin, Lock, Save, Eye, EyeOff, Camera
 } from 'lucide-react';
 
 const Profile = () => {
@@ -13,6 +13,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [showOldPass, setShowOldPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
+  const [profileImage, setProfileImage] = useState(user?.profileImage || null);
+  const fileInputRef = useRef(null);
 
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -26,6 +28,27 @@ const Profile = () => {
     newPassword: '',
     confirmPassword: '',
   });
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Image size must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+        localStorage.setItem('profileImage_' + user?.email, reader.result);
+        toast.success('Profile picture updated!');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const getProfileImage = () => {
+    return profileImage || localStorage.getItem('profileImage_' + user?.email);
+  };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -80,12 +103,39 @@ const Profile = () => {
       {/* Profile Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center gap-5">
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-            {user?.name?.charAt(0).toUpperCase()}
+          {/* Profile Picture */}
+          <div className="relative">
+            <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-lg">
+              {getProfileImage() ? (
+                <img
+                  src={getProfileImage()}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="absolute -bottom-2 -right-2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-indigo-700 transition-colors">
+              <Camera size={14} />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
           </div>
+
           <div>
             <h2 className="text-xl font-bold text-gray-800">{user?.name}</h2>
             <p className="text-gray-500">{user?.email}</p>
+            <p className="text-sm text-gray-400">{user?.businessName || 'No business name'}</p>
             <div className="flex items-center gap-2 mt-2">
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                 user?.role === 'ADMIN'
@@ -100,6 +150,9 @@ const Profile = () => {
             </div>
           </div>
         </div>
+        <p className="text-xs text-gray-400 mt-3">
+          📷 Click the camera icon to upload a profile picture (max 2MB)
+        </p>
       </div>
 
       {/* Tabs */}
@@ -131,9 +184,7 @@ const Profile = () => {
           <form onSubmit={handleProfileUpdate} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                 <div className="relative">
                   <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input type="text"
@@ -145,9 +196,7 @@ const Profile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                 <div className="relative">
                   <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input type="email" value={user?.email}
@@ -158,9 +207,7 @@ const Profile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <div className="relative">
                   <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input type="text" placeholder="Your phone number"
@@ -171,9 +218,7 @@ const Profile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
                 <div className="relative">
                   <Building size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input type="text" placeholder="Your business name"
@@ -185,9 +230,7 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
               <div className="relative">
                 <MapPin size={18} className="absolute left-3 top-4 text-gray-400" />
                 <textarea
@@ -214,9 +257,7 @@ const Profile = () => {
           <h3 className="text-lg font-bold text-gray-800 mb-6">Change Password</h3>
           <form onSubmit={handlePasswordChange} className="space-y-5 max-w-md">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Current Password *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Current Password *</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -235,9 +276,7 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                New Password *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">New Password *</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -256,9 +295,7 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm New Password *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password *</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
