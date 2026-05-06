@@ -36,11 +36,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
-      {/* Background decoration */}
+      {/* Background decoration
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-      </div>
+      </div> */}
 
       <div className="relative w-full max-w-md">
         {/* Card */}
@@ -120,11 +120,11 @@ const Login = () => {
             </Link>
           </p>
 
-          {/* Demo credentials */}
+          {/* Demo credentials
           <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
             <p className="text-xs text-indigo-400 font-medium mb-2">Demo Credentials:</p>
             <p className="text-xs text-indigo-300">Admin: admin@inventory.com / admin123</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
