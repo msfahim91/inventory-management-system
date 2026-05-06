@@ -1,5 +1,6 @@
 package com.inventory.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ public class SalesOrderItem {
 
     @ManyToOne
     @JoinColumn(name = "sales_order_id", nullable = false)
+    @JsonIgnore
     private SalesOrder salesOrder;
 
     @ManyToOne
