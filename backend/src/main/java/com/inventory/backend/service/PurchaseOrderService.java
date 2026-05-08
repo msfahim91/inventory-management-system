@@ -57,7 +57,8 @@ public class PurchaseOrderService {
         }
 
         for (PurchaseOrderItem item : order.getItems()) {
-            Product product = item.getProduct();
+            Product product = productRepository.findById(item.getProduct().getId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
             product.setQuantity(product.getQuantity() + item.getQuantity());
             product.setUpdatedAt(LocalDateTime.now());
             productRepository.save(product);
