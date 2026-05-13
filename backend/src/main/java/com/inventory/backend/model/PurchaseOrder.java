@@ -1,5 +1,6 @@
 package com.inventory.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -17,10 +18,12 @@ public class PurchaseOrder {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password"})
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "supplier_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user"})
     private Supplier supplier;
 
     @Column(unique = true)
@@ -31,8 +34,10 @@ public class PurchaseOrder {
 
     private BigDecimal totalAmount = BigDecimal.ZERO;
     private String notes;
+    private java.time.LocalDate orderDate;
 
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<PurchaseOrderItem> items;
 
     @Column(updatable = false)

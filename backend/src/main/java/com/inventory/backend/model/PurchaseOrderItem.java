@@ -1,6 +1,7 @@
 package com.inventory.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -16,11 +17,12 @@ public class PurchaseOrderItem {
 
     @ManyToOne
     @JoinColumn(name = "purchase_order_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private PurchaseOrder purchaseOrder;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnoreProperties({"user", "category", "hibernateLazyInitializer", "handler"})
     private Product product;
 
     @Column(nullable = false)
